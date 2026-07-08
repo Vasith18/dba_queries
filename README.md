@@ -1,2 +1,5 @@
-# dba_queries
-SQL DBA practice queries and scripts
+**Oracle DBA Scripts**
+This repository contains Oracle DBA scripts shared by
+Mohammed Vashid A
+
+

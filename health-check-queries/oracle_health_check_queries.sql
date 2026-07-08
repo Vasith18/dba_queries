@@ -1,0 +1,167 @@
+SET LINESIZE 200
+SET PAGESIZE 100
+SET TRIMSPOOL ON
+SET TAB OFF
+SET VERIFY OFF
+
+
+PROMPT
+PROMPT =========================================
+PROMPT 1. Database Instance Status
+PROMPT =========================================
+
+COLUMN INSTANCE_NAME FORMAT A15
+COLUMN STATUS FORMAT A10
+COLUMN DATABASE_STATUS FORMAT A15
+COLUMN HOST_NAME FORMAT A30
+
+SELECT
+    INSTANCE_NAME,
+    STATUS,
+    DATABASE_STATUS,
+    HOST_NAME
+FROM
+    V$INSTANCE;
+
+
+
+PROMPT
+PROMPT =========================================
+PROMPT 2. Database Version
+PROMPT =========================================
+
+COLUMN BANNER FORMAT A80
+
+SELECT
+    BANNER
+FROM
+    V$VERSION;
+
+
+
+PROMPT
+PROMPT =========================================
+PROMPT 3. PDB Status
+PROMPT =========================================
+
+COLUMN NAME FORMAT A20
+COLUMN OPEN_MODE FORMAT A12
+COLUMN RESTRICTED FORMAT A10
+
+SELECT
+    NAME,
+    OPEN_MODE,
+    RESTRICTED
+FROM
+    V$PDBS;
+
+
+
+PROMPT
+PROMPT =========================================
+PROMPT 4. Tablespace Usage
+PROMPT =========================================
+
+COLUMN TABLESPACE_NAME FORMAT A20
+COLUMN TOTAL_MB FORMAT 999999
+COLUMN FREE_MB FORMAT 999999
+COLUMN USED_MB FORMAT 999999
+
+SELECT
+    DF.TABLESPACE_NAME,
+    ROUND(DF.TOTAL_MB,2) TOTAL_MB,
+    ROUND(FS.FREE_MB,2) FREE_MB,
+    ROUND(DF.TOTAL_MB - FS.FREE_MB,2) USED_MB
+FROM
+    (SELECT TABLESPACE_NAME,
+            SUM(BYTES)/1024/1024 TOTAL_MB
+     FROM DBA_DATA_FILES
+     GROUP BY TABLESPACE_NAME) DF,
+    (SELECT TABLESPACE_NAME,
+            SUM(BYTES)/1024/1024 FREE_MB
+     FROM DBA_FREE_SPACE
+     GROUP BY TABLESPACE_NAME) FS
+WHERE
+    DF.TABLESPACE_NAME = FS.TABLESPACE_NAME;
+
+
+
+PROMPT
+PROMPT =========================================
+PROMPT 5. Active User Sessions
+PROMPT =========================================
+
+COLUMN USERNAME FORMAT A15
+COLUMN STATUS FORMAT A10
+COLUMN PROGRAM FORMAT A35
+
+SELECT
+    SID,
+    SERIAL#,
+    USERNAME,
+    STATUS,
+    PROGRAM
+FROM
+    V$SESSION
+WHERE
+    STATUS='ACTIVE'
+AND USERNAME IS NOT NULL;
+
+
+PROMPT
+PROMPT =========================================
+PROMPT 6. Invalid Objects
+PROMPT =========================================
+
+COLUMN OWNER FORMAT A20
+COLUMN OBJECT_NAME FORMAT A25
+COLUMN OBJECT_TYPE FORMAT A20
+COLUMN STATUS FORMAT A10
+
+SELECT
+    OWNER,
+    OBJECT_NAME,
+    OBJECT_TYPE,
+    STATUS
+FROM
+    DBA_OBJECTS
+WHERE
+    STATUS='INVALID';
+
+
+
+PROMPT
+PROMPT =========================================
+PROMPT 7. Blocking Sessions
+PROMPT =========================================
+
+SELECT
+    BLOCKING_SESSION,
+    SID,
+    SERIAL#,
+    USERNAME
+FROM
+    V$SESSION
+WHERE
+    BLOCKING_SESSION IS NOT NULL;
+
+
+PROMPT
+PROMPT =========================================
+PROMPT 8. Archive Log Status
+PROMPT =========================================
+
+COLUMN DEST_NAME FORMAT A20
+COLUMN STATUS FORMAT A10
+COLUMN ERROR FORMAT A40
+
+SELECT
+    DEST_NAME,
+    STATUS,
+    ERROR
+FROM
+    V$ARCHIVE_DEST
+WHERE
+    STATUS <> 'INACTIVE'
+ORDER BY
+    DEST_NAME;
